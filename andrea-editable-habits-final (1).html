@@ -1,0 +1,570 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andrea's 5 Habits</title>
+    <style>
+        :root {
+            --color-background: #f8fafc;
+            --color-surface: #ffffff;
+            --color-text: #1e293b;
+            --color-primary: #3b82f6;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-goal: #f59e0b;
+            --color-measure: #059669;
+            --color-monthly-goal: #8b5cf6;
+            --color-border: #e2e8f0;
+            --color-edit: #06b6d4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-background);
+            color: var(--color-text);
+            padding: 16px;
+            line-height: 1.3;
+        }
+
+        .container { max-width: 100%; margin: 0 auto; }
+
+        h1 { font-size: 1.8rem; margin-bottom: 16px; color: var(--color-text); }
+
+        .habit-editor {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .habits-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .habit-tag {
+            background: var(--color-primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .habit-tag input {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 4px;
+            color: white;
+            padding: 2px 4px;
+            font-size: 13px;
+            width: 120px;
+            margin: 0;
+        }
+
+        .habit-tag input:focus {
+            border-color: white;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+        }
+
+        .habit-tag:hover { background: #2563eb; }
+
+        .habit-tag.deleting { background: var(--color-danger); }
+
+        .add-habit {
+            background: var(--color-edit);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .add-habit:hover { background: #0891b2; }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        select, input[type="number"], button {
+            padding: 8px 10px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        select, input[type="number"] { background: var(--color-surface); color: var(--color-text); min-width: 0; }
+
+        button:not(.add-habit) { 
+            background: var(--color-primary); 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 500; 
+            white-space: nowrap;
+        }
+
+        button:not(.add-habit):hover { background: #2563eb; }
+
+        .calendar {
+            background: var(--color-surface);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 1px solid var(--color-border);
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            table-layout: fixed;
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 11px;
+            border-bottom: 2px solid var(--color-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+            height: 48px;
+        }
+
+        .habit-header {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+            color: var(--color-primary) !important;
+            font-weight: 700 !important;
+            width: 140px !important;
+            font-size: 10px !important;
+            line-height: 1.15;
+            vertical-align: middle;
+            padding: 4px 6px !important;
+            white-space: normal !important;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            position: relative;
+        }
+
+        .habit-header.editing {
+            background: rgba(6, 182, 212, 0.1) !important;
+        }
+
+        .day-header {
+            width: 34px !important;
+        }
+
+        .goal-header {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+            color: var(--color-goal) !important;
+            font-weight: 700 !important;
+            font-size: 9px !important;
+            width: 51px !important;
+            vertical-align: middle;
+            padding: 4px 2px !important;
+            white-space: normal !important;
+            word-break: break-word;
+        }
+
+        .monthly-goal-header {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%) !important;
+            color: var(--color-monthly-goal) !important;
+            font-weight: 700 !important;
+            font-size: 9px !important;
+            width: 51px !important;
+            vertical-align: middle;
+            padding: 4px 2px !important;
+            white-space: normal !important;
+            word-break: break-word;
+        }
+
+        td {
+            padding: 0;
+            height: 48px;
+            border-right: 1px solid var(--color-border);
+        }
+
+        td:last-child { border-right: none; }
+
+        .day-cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .day-cell:hover { background: #f0f9ff; }
+
+        .day-cell.check { color: var(--color-success); }
+
+        .day-cell.cross { color: var(--color-danger); }
+
+        .day-cell.empty { color: #94a3b8; opacity: 0.7; }
+
+        .goal-cell, .monthly-goal-cell {
+            background: #fefce8;
+            height: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .goal-cell::before, .monthly-goal-cell::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            height: 1px;
+            background: rgba(245, 158, 11, 0.6);
+            transform: translateY(-50%);
+        }
+
+        .goal-input {
+            width: 96%;
+            height: 47%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-weight: 500;
+            padding: 0 1px;
+            box-sizing: border-box;
+            font-size: 9px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .goal-input.goal { color: var(--color-goal); margin-bottom: 0; }
+        .goal-input.measure { color: var(--color-measure); margin-top: 0; }
+        .goal-input.monthly-goal { color: var(--color-monthly-goal); }
+
+        .goal-input:focus { 
+            outline: none; 
+            background: rgba(255,255,255,0.95); 
+            border-radius: 2px; 
+            z-index: 2;
+        }
+
+        .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .habit-header { width: 120px !important; font-size: 9px !important; }
+            .day-cell { font-size: 18px; }
+            th { padding: 6px 3px; font-size: 10px; }
+            .goal-input { font-size: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Andrea's 5 Habits</h1>
+
+        <div class="habit-editor">
+            <div class="habits-list" id="habitsList"></div>
+            <button class="add-habit" onclick="addHabit()">+ Add Habit</button>
+        </div>
+
+        <div class="controls">
+            <select id="monthSelect">
+                <option value="0">January</option><option value="1">February</option><option value="2" selected>March</option><option value="3">April</option><option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option><option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option>
+            </select>
+            <input type="number" id="yearSelect" value="2026" min="2020" max="2030" style="width:75px">
+            <button onclick="generateCalendar()">Load</button>
+        </div>
+
+        <div class="calendar">
+            <table><thead id="headerRow"></thead><tbody id="calendarBody"></tbody></table>
+        </div>
+
+        <div class="actions">
+            <button onclick="exportCSV()">CSV Export</button>
+            <button onclick="clearAllData()">Clear All Data</button>
+        </div>
+    </div>
+
+    <script>
+        let HABITS = ['Scripture study', 'Pray Meaningfully', 'Nutrition', 'Exercise', 'Water intake 3L'];
+        const STORAGE_KEY = 'andreaEditableHabits';
+
+        function loadHabits() {
+            const saved = localStorage.getItem(`${STORAGE_KEY}_habits`);
+            if(saved) HABITS = JSON.parse(saved);
+            renderHabitsList();
+        }
+
+        function saveHabits() {
+            localStorage.setItem(`${STORAGE_KEY}_habits`, JSON.stringify(HABITS));
+        }
+
+        function renderHabitsList() {
+            const list = document.getElementById('habitsList');
+            list.innerHTML = '';
+            HABITS.forEach((habit, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'habit-tag';
+                tag.innerHTML = `
+                    <input type="text" value="${habit}" onblur="updateHabit(${index}, this.value)" onkeydown="handleHabitKeydown(event, ${index})">
+                    <button onclick="deleteHabit(${index})" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:16px;padding:0;">×</button>
+                `;
+                list.appendChild(tag);
+            });
+        }
+
+        function addHabit() {
+            HABITS.push('New Habit');
+            saveHabits();
+            renderHabitsList();
+            generateCalendar();
+        }
+
+        function updateHabit(index, name) {
+            if(name.trim()) {
+                HABITS[index] = name.trim();
+                saveHabits();
+                generateCalendar();
+            }
+        }
+
+        function deleteHabit(index) {
+            const tag = event.target.closest('.habit-tag');
+            tag.classList.add('deleting');
+            setTimeout(() => {
+                HABITS.splice(index, 1);
+                saveHabits();
+                renderHabitsList();
+                generateCalendar();
+            }, 200);
+        }
+
+        function handleHabitKeydown(event, index) {
+            if(event.key === 'Enter') {
+                event.target.blur();
+            }
+        }
+
+        function getData() { 
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); 
+        }
+
+        function saveData(data) { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+        }
+
+        function getDateKey(m,d,y) { 
+            return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; 
+        }
+
+        function getMonthKey(m,y) { 
+            return `${y}-${String(m+1).padStart(2,'0')}`; 
+        }
+
+        function isSaturday(m,d,y) { 
+            return new Date(y,m,d).getDay() === 6; 
+        }
+
+        function generateCalendar() {
+            const m = parseInt(document.getElementById('monthSelect').value);
+            const y = parseInt(document.getElementById('yearSelect').value);
+            const days = new Date(y, m + 1, 0).getDate();
+            const data = getData();
+            const tbody = document.getElementById('calendarBody');
+            const thead = document.getElementById('headerRow');
+
+            let headers = '';
+            for(let d=1; d<=days; d++) {
+                headers += '<th class="day-header">' + d + '</th>';
+                if(isSaturday(m,d,y)) headers += '<th class="goal-header">Goal</th>';
+            }
+            headers += '<th class="monthly-goal-header">Monthly Goal</th>';
+
+            thead.innerHTML = '<tr><th class="habit-header">Habit</th>' + headers + '</tr>';
+            tbody.innerHTML = '';
+
+            HABITS.forEach(habit => {
+                const row = document.createElement('tr');
+                const habitTh = document.createElement('th');
+                habitTh.className = 'habit-header';
+                habitTh.textContent = habit;
+                habitTh.ondblclick = () => editHabitHeader(habitTh);
+                row.appendChild(habitTh);
+
+                for(let day=1; day<=days; day++) {
+                    const dayTd = document.createElement('td');
+                    const toggle = document.createElement('div');
+                    toggle.className = 'day-cell empty';
+                    toggle.textContent = '○';
+
+                    const dateKey = getDateKey(m,day,y);
+                    const state = data[habit]?.[dateKey] || '';
+                    if(state === 'check') { toggle.textContent = '✓'; toggle.className = 'day-cell check'; }
+                    else if(state === 'x') { toggle.textContent = '✕'; toggle.className = 'day-cell cross'; }
+
+                    toggle.onclick = () => toggleHabit(habit,m,day,y);
+                    dayTd.appendChild(toggle);
+                    row.appendChild(dayTd);
+
+                    if(isSaturday(m,day,y)) {
+                        const goalTd = document.createElement('td');
+                        goalTd.className = 'goal-cell';
+
+                        const goalIn1 = document.createElement('input');
+                        goalIn1.className = 'goal-input goal';
+                        const gKey1 = `goal-${dateKey}`;
+                        goalIn1.value = data[habit]?.[gKey1] || '';
+                        goalIn1.onblur = () => saveGoal(habit, gKey1, goalIn1.value);
+
+                        const goalIn2 = document.createElement('input');
+                        goalIn2.className = 'goal-input measure';
+                        const gKey2 = `measure-${dateKey}`;
+                        goalIn2.value = data[habit]?.[gKey2] || '';
+                        goalIn2.onblur = () => saveGoal(habit, gKey2, goalIn2.value);
+
+                        goalTd.appendChild(goalIn1);
+                        goalTd.appendChild(goalIn2);
+                        row.appendChild(goalTd);
+                    }
+                }
+
+                const monthlyTd = document.createElement('td');
+                monthlyTd.className = 'monthly-goal-cell';
+
+                const monthlyKey = getMonthKey(m,y);
+                const mGoal1 = document.createElement('input');
+                mGoal1.className = 'goal-input goal monthly-goal';
+                mGoal1.value = data[habit]?.[`monthly-goal-${monthlyKey}`] || '';
+                mGoal1.onblur = () => saveGoal(habit, `monthly-goal-${monthlyKey}`, mGoal1.value);
+
+                const mGoal2 = document.createElement('input');
+                mGoal2.className = 'goal-input measure';
+                mGoal2.value = data[habit]?.[`monthly-measure-${monthlyKey}`] || '';
+                mGoal2.onblur = () => saveGoal(habit, `monthly-measure-${monthlyKey}`, mGoal2.value);
+
+                monthlyTd.appendChild(mGoal1);
+                monthlyTd.appendChild(mGoal2);
+                row.appendChild(monthlyTd);
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function editHabitHeader(th) {
+            const originalText = th.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalText;
+            input.style.width = '100%';
+            input.style.height = '100%';
+            input.style.border = 'none';
+            input.style.background = 'rgba(255,255,255,0.9)';
+            input.style.textAlign = 'left';
+            input.style.padding = '4px 6px';
+            input.style.fontSize = '10px';
+            input.style.fontWeight = '700';
+
+            th.innerHTML = '';
+            th.appendChild(input);
+            input.focus();
+            input.select();
+
+            function saveEdit() {
+                const newName = input.value.trim();
+                if(newName) {
+                    const index = HABITS.indexOf(originalText);
+                    if(index > -1) {
+                        HABITS[index] = newName;
+                        saveHabits();
+                    }
+                }
+                generateCalendar();
+            }
+
+            input.onblur = saveEdit;
+            input.onkeydown = (e) => {
+                if(e.key === 'Enter') {
+                    saveEdit();
+                } else if(e.key === 'Escape') {
+                    generateCalendar();
+                }
+            };
+        }
+
+        function toggleHabit(habit,m,d,y) {
+            const data = getData();
+            const key = getDateKey(m,d,y);
+            if(!data[habit]) data[habit] = {};
+            const current = data[habit][key];
+            data[habit][key] = current==='check' ? 'x' : current==='x' ? '' : 'check';
+            saveData(data);
+            generateCalendar();
+        }
+
+        function saveGoal(habit,k,v) {
+            const data = getData();
+            if(!data[habit]) data[habit] = {};
+            if(v.trim()) data[habit][k] = v.trim();
+            else delete data[habit][k];
+            saveData(data);
+        }
+
+        function exportCSV() {
+            const data = getData();
+            let csv = 'Habit,Date,State,Goal,Measure\n';
+            Object.keys(data).forEach(habit => {
+                Object.keys(data[habit]).forEach(key => {
+                    if(key.includes('-')) {
+                        csv += `"${habit}","${key}","${data[habit][key] || ''}","${data[habit][`goal-${key}`] || ''}","${data[habit][`measure-${key}`] || ''}"\n`;
+                    }
+                });
+            });
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'habits.csv';
+            a.click();
+        }
+
+        function clearAllData() {
+            if(confirm('Clear ALL data including habits?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(`${STORAGE_KEY}_habits`);
+                location.reload();
+            }
+        }
+
+        window.onload = () => {
+            loadHabits();
+            generateCalendar();
+        };
+    </script>
+</body>
+</html>
