@@ -282,9 +282,33 @@
             th { padding: 6px 3px; font-size: 10px; }
             .goal-input { font-size: 8px; }
         }
-        /* iPhone SCROLL FIX */
-html { height: auto !important; }
-body { min-height: 100vh !important; position: relative !important; overflow-y: auto !important; padding-bottom
+
+/* MOBILE SCROLLING FIX FOR IPHONE */
+html { 
+  height: auto !important; 
+}
+body { 
+  min-height: 100vh !important; 
+  position: relative !important; 
+  overflow-y: auto !important; 
+  padding-bottom: 120px !important; 
+}
+.calendar { 
+  max-height: 75vh !important; 
+  overflow-y: auto !important; 
+  overflow-x: hidden !important; 
+}
+.calendar table { 
+  display: block !important; 
+  width: 100% !important; 
+  overflow-x: auto !important; 
+}
+@media (max-width: 768px) {
+  .calendar table { 
+    max-height: 60vh !important; 
+  }
+}
+        
     </style>
 </head>
 <body>
